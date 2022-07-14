@@ -24,15 +24,22 @@ import conductor.DeviceInfo
 import conductor.Driver
 import conductor.Point
 import conductor.TreeNode
+import conductor.android.models.DeviceInfoResponse
+import conductor.android.models.TapRequest
+import conductor.android.models.ViewHierarchyResponse
 import conductor.utils.SocketUtils.isPortInUse
-import conductor_android.ConductorDriverGrpc
-import conductor_android.deviceInfoRequest
-import conductor_android.tapRequest
-import conductor_android.viewHierarchyRequest
 import dadb.AdbShellResponse
 import dadb.AdbShellStream
 import dadb.Dadb
-import io.grpc.ManagedChannelBuilder
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import kotlinx.coroutines.runBlocking
 import okio.buffer
 import okio.sink
 import okio.source
@@ -48,10 +55,14 @@ class AndroidDriver(
     private val hostPort: Int,
 ) : Driver {
 
-    private val channel = ManagedChannelBuilder.forAddress("localhost", hostPort)
-        .usePlaintext()
-        .build()
-    private val blockingStub = ConductorDriverGrpc.newBlockingStub(channel)
+    private val baseUrl = "http://localhost:$hostPort"
+    private val client by lazy {
+        HttpClient(CIO) {
+            install(JsonFeature) {
+                serializer = KotlinxSerializer()
+            }
+        }
+    }
     private val documentBuilderFactory = DocumentBuilderFactory.newInstance()
 
     private var instrumentationSession: AdbShellStream? = null
@@ -109,11 +120,13 @@ class AndroidDriver(
         uninstallConductorApks()
         instrumentationSession?.close()
         instrumentationSession = null
-        channel.shutdown()
+        client.close()
     }
 
     override fun deviceInfo(): DeviceInfo {
-        val response = blockingStub.deviceInfo(deviceInfoRequest {})
+        val response = runBlocking {
+            client.get<DeviceInfoResponse>("$baseUrl/device/info")
+        }
 
         return DeviceInfo(
             widthPixels = response.widthPixels,
@@ -131,16 +144,23 @@ class AndroidDriver(
     }
 
     override fun tap(point: Point) {
-        blockingStub.tap(
-            tapRequest {
-                x = point.x
-                y = point.y
+        runBlocking {
+            client.post<Unit>(
+                "$baseUrl/device/tap"
+            ) {
+                contentType(ContentType.Application.Json)
+                body = TapRequest(
+                    x = point.x,
+                    y = point.y
+                )
             }
-        ) ?: throw IllegalStateException("Response can't be null")
+        }
     }
 
     override fun contentDescriptor(): TreeNode {
-        val response = blockingStub.viewHierarchy(viewHierarchyRequest {})
+        val response = runBlocking {
+            client.get<ViewHierarchyResponse>("$baseUrl/device/hierarchy")
+        }
 
         val document = documentBuilderFactory
             .newDocumentBuilder()
