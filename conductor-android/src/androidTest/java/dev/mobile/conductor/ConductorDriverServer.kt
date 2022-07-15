@@ -1,6 +1,7 @@
 package dev.mobile.conductor
 
 import android.util.Log
+import androidx.test.uiautomator.Configurator
 import androidx.test.uiautomator.UiDevice
 import conductor.android.models.DeviceInfoResponse
 import conductor.android.models.TapRequest
@@ -37,6 +38,11 @@ class ConductorDriverServer(
     }
 
     fun start(): ConductorDriverServer {
+        Configurator.getInstance()
+            .setActionAcknowledgmentTimeout(0L)
+            .setWaitForIdleTimeout(0L)
+            .setWaitForSelectorTimeout(0L)
+
         embeddedServer(Netty, port = 7001) {
             install(ContentNegotiation) {
                 json(
