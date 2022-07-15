@@ -5,6 +5,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.ByteArrayOutputStream
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -18,8 +19,25 @@ class ConductorDriverService {
     fun grpcServer() {
         val uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        ConductorDriverServer(uiDevice)
+        val server = ConductorDriverServer(uiDevice)
             .start()
+
+        while (true) {
+            val hierarchy = getViewHierarchy(uiDevice)
+            server.onViewHierarchyUpdate(
+                ConductorDriverServer.HierarchyEntry(
+                    hierarchy,
+                    System.currentTimeMillis(),
+                )
+            )
+            Thread.sleep(100)
+        }
+    }
+
+    private fun getViewHierarchy(uiDevice: UiDevice): String {
+        val stream = ByteArrayOutputStream()
+        uiDevice.dumpWindowHierarchy(stream)
+        return stream.toString(Charsets.UTF_8.name())
     }
 
 }

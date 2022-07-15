@@ -162,7 +162,13 @@ class AndroidDriver(
         LOGGER.info("Get content descriptor")
 
         val response = runBlocking {
-            client.get<ViewHierarchyResponse>("$baseUrl/device/hierarchy")
+            try {
+                client.get<ViewHierarchyResponse>("$baseUrl/device/hierarchy")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Thread.sleep(5000)
+                throw e
+            }
         }
 
         LOGGER.info("Parsing content descriptor")

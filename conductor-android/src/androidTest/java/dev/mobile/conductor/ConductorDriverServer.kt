@@ -19,16 +19,24 @@ import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.io.ByteArrayOutputStream
 
 class ConductorDriverServer(
     private val uiDevice: UiDevice,
 ) {
 
-    fun start() {
+    data class HierarchyEntry(
+        val hierarchy: String,
+        val timestamp: Long,
+    )
+
+    private var viewHierarchy: HierarchyEntry? = null
+
+    fun onViewHierarchyUpdate(viewHierarchy: HierarchyEntry) {
+        this.viewHierarchy = viewHierarchy
+    }
+
+    fun start(): ConductorDriverServer {
         embeddedServer(Netty, port = 7001) {
             install(ContentNegotiation) {
                 json(
@@ -45,7 +53,9 @@ class ConductorDriverServer(
                 tap()
                 health()
             }
-        }.start(wait = true)
+        }.start(wait = false)
+
+        return this
     }
 
     private fun Route.health() {
@@ -71,20 +81,33 @@ class ConductorDriverServer(
         get("/device/hierarchy") {
             Log.d("Conductor", "Get hierarchy")
 
-            val hierarchy = withContext(Dispatchers.IO) {
-                val stream = ByteArrayOutputStream()
-                uiDevice.dumpWindowHierarchy(stream)
-                stream.toString(Charsets.UTF_8.name())
-            }
+            val entry = waitForHierarchy()
+                ?: kotlin.run {
+                    call.respond(HttpStatusCode.ServiceUnavailable)
+                    return@get
+                }
 
             Log.d("Conductor", "Hierarchy obtained")
 
             call.respond(
                 ViewHierarchyResponse(
-                    hierarchy = hierarchy,
+                    hierarchy = entry.hierarchy,
                 )
             )
         }
+    }
+
+    private fun waitForHierarchy(): HierarchyEntry? {
+        val time = System.currentTimeMillis()
+        repeat(100) {
+            viewHierarchy?.let {
+                if (it.timestamp >= time) {
+                    return it
+                }
+            }
+            Thread.sleep(100)
+        }
+        return null
     }
 
     private fun Route.tap() {
