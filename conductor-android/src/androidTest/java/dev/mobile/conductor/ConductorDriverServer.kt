@@ -1,5 +1,6 @@
 package dev.mobile.conductor
 
+import android.util.Log
 import androidx.test.uiautomator.UiDevice
 import conductor.android.models.DeviceInfoResponse
 import conductor.android.models.TapRequest
@@ -42,12 +43,21 @@ class ConductorDriverServer(
                 deviceInfo()
                 viewHierarchy()
                 tap()
+                health()
             }
         }.start(wait = true)
     }
 
+    private fun Route.health() {
+        get("/health") {
+            Log.d("Conductor", "Health: OK")
+            call.respond(HttpStatusCode.OK)
+        }
+    }
+
     private fun Route.deviceInfo() {
         get("/device/info") {
+            Log.d("Conductor", "Get device info")
             call.respond(
                 DeviceInfoResponse(
                     widthPixels = uiDevice.displayWidth,
@@ -59,11 +69,15 @@ class ConductorDriverServer(
 
     private fun Route.viewHierarchy() {
         get("/device/hierarchy") {
+            Log.d("Conductor", "Get hierarchy")
+
             val hierarchy = withContext(Dispatchers.IO) {
                 val stream = ByteArrayOutputStream()
                 uiDevice.dumpWindowHierarchy(stream)
                 stream.toString(Charsets.UTF_8.name())
             }
+
+            Log.d("Conductor", "Hierarchy obtained")
 
             call.respond(
                 ViewHierarchyResponse(
@@ -75,8 +89,12 @@ class ConductorDriverServer(
 
     private fun Route.tap() {
         post("/device/tap") {
+            Log.d("Conductor", "Tap on element")
+
             val request = call.receive<TapRequest>()
             uiDevice.click(request.x, request.y)
+
+            Log.d("Conductor", "Tap on element complete")
 
             call.respond(HttpStatusCode.OK)
         }

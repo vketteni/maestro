@@ -27,7 +27,6 @@ import conductor.TreeNode
 import conductor.android.models.DeviceInfoResponse
 import conductor.android.models.TapRequest
 import conductor.android.models.ViewHierarchyResponse
-import conductor.utils.SocketUtils.isPortInUse
 import dadb.AdbShellResponse
 import dadb.AdbShellStream
 import dadb.Dadb
@@ -51,7 +50,7 @@ import java.io.IOException
 import java.util.concurrent.TimeoutException
 import javax.xml.parsers.DocumentBuilderFactory
 
-class AndroidDriver(
+class AlternativeAndroidDriver(
     private val dadb: Dadb,
     private val hostPort: Int,
 ) : Driver {
@@ -67,7 +66,6 @@ class AndroidDriver(
     private val documentBuilderFactory = DocumentBuilderFactory.newInstance()
 
     private var instrumentationSession: AdbShellStream? = null
-    private var forwarder: AutoCloseable? = null
 
     override fun name(): String {
         return "Android Device ($dadb)"
@@ -89,13 +87,6 @@ class AndroidDriver(
             instrumentationSession?.close()
             return
         }
-
-        if (!isPortInUse("localhost", 7001)) {
-            forwarder = dadb.tcpForward(
-                hostPort,
-                7001
-            )
-        }
     }
 
     private fun awaitLaunch() {
@@ -116,8 +107,6 @@ class AndroidDriver(
     }
 
     override fun close() {
-        forwarder?.close()
-        forwarder = null
         uninstallConductorApks()
         instrumentationSession?.close()
         instrumentationSession = null
@@ -126,7 +115,12 @@ class AndroidDriver(
 
     override fun deviceInfo(): DeviceInfo {
         val response = runBlocking {
-            client.get<DeviceInfoResponse>("$baseUrl/device/info")
+            dadb.tcpForward(
+                hostPort,
+                7001
+            ).use {
+                client.get<DeviceInfoResponse>("$baseUrl/device/info")
+            }
         }
 
         return DeviceInfo(
@@ -146,14 +140,19 @@ class AndroidDriver(
 
     override fun tap(point: Point) {
         runBlocking {
-            client.post<Unit>(
-                "$baseUrl/device/tap"
-            ) {
-                contentType(ContentType.Application.Json)
-                body = TapRequest(
-                    x = point.x,
-                    y = point.y
-                )
+            dadb.tcpForward(
+                hostPort,
+                7001
+            ).use {
+                client.post<Unit>(
+                    "$baseUrl/device/tap"
+                ) {
+                    contentType(ContentType.Application.Json)
+                    body = TapRequest(
+                        x = point.x,
+                        y = point.y
+                    )
+                }
             }
         }
     }
@@ -162,7 +161,12 @@ class AndroidDriver(
         LOGGER.info("Get content descriptor")
 
         val response = runBlocking {
-            client.get<ViewHierarchyResponse>("$baseUrl/device/hierarchy")
+            dadb.tcpForward(
+                hostPort,
+                7001
+            ).use {
+                client.get<ViewHierarchyResponse>("$baseUrl/device/hierarchy")
+            }
         }
 
         LOGGER.info("Parsing content descriptor")
@@ -309,7 +313,7 @@ class AndroidDriver(
     companion object {
 
         private const val SERVER_LAUNCH_TIMEOUT_MS = 5000
-        private val LOGGER = LoggerFactory.getLogger(AndroidDriver::class.java)
+        private val LOGGER = LoggerFactory.getLogger(AlternativeAndroidDriver::class.java)
 
     }
 }
