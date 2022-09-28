@@ -395,6 +395,39 @@ internal class MaestroCommandSerializationTest {
             .isEqualTo(command)
     }
 
+    @Test
+    fun `serialize Mock Start`() {
+        // given
+        val command = MaestroCommand(
+            MockStartCommand(
+                recordIfMissing = true,
+                recordIfStale = null,
+                enabled = true,
+                file = "app.replay"
+            )
+        )
+
+        // when
+        val serializedCommandJson = command.toJson()
+        val deserializedCommand = objectMapper.readValue(serializedCommandJson, MaestroCommand::class.java)
+
+        // then
+        @Language("json")
+        val expectedJson = """
+            {
+              "mockStartCommand" : {
+                "recordIfMissing" : true,
+                "enabled" : true,
+                "file" : "app.replay"
+              }
+            }
+          """.trimIndent()
+        assertThat(serializedCommandJson)
+            .isEqualTo(expectedJson)
+        assertThat(deserializedCommand)
+            .isEqualTo(command)
+    }
+
     private fun MaestroCommand.toJson(): String =
         objectMapper
             .writerWithDefaultPrettyPrinter()

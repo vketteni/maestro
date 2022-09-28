@@ -8,6 +8,7 @@ import maestro.orchestra.LaunchAppCommand
 import maestro.orchestra.MaestroCommand
 import maestro.orchestra.MaestroConfig
 import maestro.orchestra.MaestroInitFlow
+import maestro.orchestra.MockStartCommand
 import maestro.orchestra.ScrollCommand
 import maestro.orchestra.error.InvalidInitFlowFile
 import maestro.orchestra.error.SyntaxError
@@ -256,6 +257,40 @@ internal class YamlCommandReaderTest {
             )),
             LaunchAppCommand(
                 appId = "com.example.app"
+            ),
+        )
+    }
+
+    @Test
+    fun mock_start(
+        @YamlFile("021_mock_start.yaml") commands: List<Command>,
+    ) {
+        assertThat(commands).containsExactly(
+            ApplyConfigurationCommand(MaestroConfig(
+                appId = "com.example.app",
+            )),
+            MockStartCommand(
+                recordIfMissing = true,
+                recordIfStale = null,
+                enabled = true,
+                file = "app.replay"
+            ),
+        )
+    }
+
+    @Test
+    fun mock_start_with_config(
+        @YamlFile("022_mock_start_with_config.yaml") commands: List<Command>,
+    ) {
+        assertThat(commands).containsExactly(
+            ApplyConfigurationCommand(MaestroConfig(
+                appId = "com.example.app",
+            )),
+            MockStartCommand(
+                recordIfMissing = false,
+                recordIfStale = 2000,
+                enabled = false,
+                file = "test.replay"
             ),
         )
     }

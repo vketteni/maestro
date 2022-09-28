@@ -1,0 +1,7 @@
+appId: com.example.app
+---
+- mockStart:
+    recordIfMissing: false
+    file: "test.replay"
+    enabled: false
+    recordIfStale: 2000
