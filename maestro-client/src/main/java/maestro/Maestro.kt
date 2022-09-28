@@ -332,6 +332,16 @@ class Maestro(private val driver: Driver) : AutoCloseable {
         waitForAppToSettle()
     }
 
+    fun mockStart() {
+        println("Mock start")
+//        TODO("Implement start mock")
+    }
+
+    fun mockStop() {
+        println("Mock stop")
+//        TODO("Implement stop mock")
+    }
+
     override fun close() {
         driver.close()
     }

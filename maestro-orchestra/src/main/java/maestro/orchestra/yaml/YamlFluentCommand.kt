@@ -32,6 +32,8 @@ import maestro.orchestra.HideKeyboardCommand
 import maestro.orchestra.InputTextCommand
 import maestro.orchestra.LaunchAppCommand
 import maestro.orchestra.MaestroCommand
+import maestro.orchestra.MockStartCommand
+import maestro.orchestra.MockStopCommand
 import maestro.orchestra.OpenLinkCommand
 import maestro.orchestra.PressKeyCommand
 import maestro.orchestra.ScrollCommand
@@ -42,7 +44,6 @@ import maestro.orchestra.TapOnElementCommand
 import maestro.orchestra.TapOnPointCommand
 import maestro.orchestra.error.InvalidInitFlowFile
 import maestro.orchestra.error.SyntaxError
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -64,6 +65,8 @@ data class YamlFluentCommand(
     val stopApp: YamlStopApp? = null,
     val clearState: YamlClearState? = null,
     val runFlow: YamlRunFlow? = null,
+    val mockStart: YamlMockStart? = null,
+    val mockStop: YamlMockStop? = null
 ) {
 
     @SuppressWarnings("ComplexMethod")
@@ -105,6 +108,13 @@ data class YamlFluentCommand(
                 )
             )
             runFlow != null -> runFlow(flowPath, runFlow)
+            mockStart != null -> listOf(MaestroCommand(MockStartCommand(
+                recordIfMissing = mockStart.recordIfMissing ?: true,
+                recordIfStale = mockStart.recordIfStale,
+                file = mockStart.file ?: "app.replay",
+                enabled = mockStart.enabled ?: true
+            )))
+            mockStop != null -> listOf(MaestroCommand(MockStopCommand()))
             else -> throw SyntaxError("Invalid command: No mapping provided for $this")
         }
     }
@@ -346,6 +356,19 @@ data class YamlFluentCommand(
 
                 "scroll" -> YamlFluentCommand(
                     action = "scroll"
+                )
+
+                "mockStart" -> YamlFluentCommand(
+                    mockStart = YamlMockStart(
+                        recordIfMissing = true,
+                        recordIfStale = null,
+                        enabled = true,
+                        file = null
+                    )
+                )
+
+                "mockStop" -> YamlFluentCommand(
+                    mockStop = YamlMockStop()
                 )
 
                 else -> throw SyntaxError("Invalid command: \"$stringCommand\"")

@@ -135,6 +135,8 @@ class Orchestra(
             is StopAppCommand -> maestro.stopApp(command.appId)
             is ClearStateCommand -> maestro.clearAppState(command.appId)
             is ClearKeychainCommand -> maestro.clearKeychain()
+            is MockStartCommand -> maestro.mockStart()
+            is MockStopCommand -> maestro.mockStop()
             is ApplyConfigurationCommand, null -> { /* no-op */
             }
         }

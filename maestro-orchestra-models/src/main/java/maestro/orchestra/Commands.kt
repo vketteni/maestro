@@ -349,3 +349,21 @@ class ClearKeychainCommand : Command {
     }
 
 }
+
+data class MockStartCommand(
+    val recordIfMissing: Boolean?,
+    val recordIfStale: Int?,
+    val enabled: Boolean?,
+    val file: String?
+): Command {
+
+    override fun description(): String = "Mock start"
+
+    override fun injectEnv(env: Map<String, String>): Command = this
+}
+
+class MockStopCommand: Command {
+    override fun description(): String = "Mock stop"
+
+    override fun injectEnv(env: Map<String, String>): Command = this
+}
