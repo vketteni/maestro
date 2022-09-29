@@ -66,4 +66,7 @@ interface Driver {
 
     fun takeScreenshot(out: Sink)
 
+    fun setDeviceProxy(host: String, port: Int)
+
+    fun removeDeviceProxy()
 }

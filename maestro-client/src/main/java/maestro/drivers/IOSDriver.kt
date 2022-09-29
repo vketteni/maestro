@@ -258,6 +258,14 @@ class IOSDriver(
         iosDevice.takeScreenshot(out).expect {}
     }
 
+    override fun setDeviceProxy(host: String, port: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun removeDeviceProxy() {
+        TODO("Not yet implemented")
+    }
+
     override fun inputText(text: String) {
         iosDevice.input(text).expect {}
     }

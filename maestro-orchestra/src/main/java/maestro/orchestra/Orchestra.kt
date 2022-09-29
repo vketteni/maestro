@@ -135,10 +135,29 @@ class Orchestra(
             is StopAppCommand -> maestro.stopApp(command.appId)
             is ClearStateCommand -> maestro.clearAppState(command.appId)
             is ClearKeychainCommand -> maestro.clearKeychain()
-            is MockStartCommand -> maestro.mockStart()
+            is MockStartCommand -> mockStart(command)
             is MockStopCommand -> maestro.mockStop()
             is ApplyConfigurationCommand, null -> { /* no-op */
             }
+        }
+    }
+
+    private fun mockStart(command: MockStartCommand) {
+        if (command.enabled == false) return
+
+        val hasFile = !command.file.isNullOrEmpty() && File(command.file!!).exists()
+
+        if (!hasFile && command.recordIfMissing == true) {
+            val count = File(".").listFiles().filter { it.name.contains("app_") }.size
+            val into = File("app_$count.replay") // todo - allow custom record names
+            maestro.mockStartRecord(into.toPath())
+        }
+
+        else {
+            val replay = File(command.file ?: "app.replay")
+            if (!replay.exists()) throw NullPointerException("Unable to find replay file: $replay")
+
+            maestro.mockStartReplay(replay.toPath())
         }
     }
 

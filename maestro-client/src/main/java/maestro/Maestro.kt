@@ -29,6 +29,7 @@ import maestro.UiElement.Companion.toUiElement
 import maestro.UiElement.Companion.toUiElementOrNull
 import maestro.drivers.AndroidDriver
 import maestro.drivers.IOSDriver
+import maestro.mock.Proxy
 import okio.Buffer
 import okio.Sink
 import okio.buffer
@@ -36,10 +37,14 @@ import okio.sink
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.File
+import java.nio.file.Path
 import javax.imageio.ImageIO
+import kotlin.math.log
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class Maestro(private val driver: Driver) : AutoCloseable {
+
+    private val proxy by lazy { Proxy() }
 
     fun deviceName(): String {
         return driver.name()
@@ -332,14 +337,21 @@ class Maestro(private val driver: Driver) : AutoCloseable {
         waitForAppToSettle()
     }
 
-    fun mockStart() {
-        println("Mock start")
-//        TODO("Implement start mock")
+    fun mockStartRecord(filepath: Path) {
+        driver.setDeviceProxy(proxy.host, proxy.port)
+        proxy.startRecord(filepath)
+        Thread.sleep(5000)
+    }
+
+    fun mockStartReplay(replayFilepath: Path) {
+        driver.setDeviceProxy(proxy.host, proxy.port)
+        proxy.startReplay(replayFilePath = replayFilepath)
+        Thread.sleep(5000)
     }
 
     fun mockStop() {
-        println("Mock stop")
-//        TODO("Implement stop mock")
+        driver.removeDeviceProxy()
+        proxy.stop()
     }
 
     override fun close() {

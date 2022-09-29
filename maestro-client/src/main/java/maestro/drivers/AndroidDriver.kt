@@ -42,6 +42,7 @@ import okio.Sink
 import okio.buffer
 import okio.sink
 import okio.source
+import org.slf4j.LoggerFactory
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.SAXException
@@ -99,7 +100,7 @@ class AndroidDriver(
         while (System.currentTimeMillis() - startTime < SERVER_LAUNCH_TIMEOUT_MS) {
             try {
                 dadb.open("tcp:7001").close()
-                blockingStub.viewHierarchy(viewHierarchyRequest {  })
+                blockingStub.viewHierarchy(viewHierarchyRequest { })
                 return
             } catch (ignored: Exception) {
                 // Continue
@@ -144,8 +145,9 @@ class AndroidDriver(
             val apkFile = AndroidAppFiles.getApkFile(dadb, appId)
             val manifest = apkFile.asManifest()
             if (hasThirdPartyLauncherConfigured(manifest, appId) && hasOnlyAppLauncher(manifest, appId)) {
-                val activity = manifest.activities.first { it.isHomeActivity &&
-                    it.name.split(".").intersect(appId.split(".").toSet()).isNotEmpty()
+                val activity = manifest.activities.first {
+                    it.isHomeActivity &&
+                        it.name.split(".").intersect(appId.split(".").toSet()).isNotEmpty()
                 }
                 shell("am start-activity -n $appId/${activity.name}")
             } else {
@@ -159,13 +161,15 @@ class AndroidDriver(
     }
 
     private fun hasOnlyAppLauncher(manifest: ManifestData, appId: String) =
-        manifest.activities.filter { it.isHomeActivity &&
-            it.name.split(".").intersect(appId.split(".").toSet()).isNotEmpty()
+        manifest.activities.filter {
+            it.isHomeActivity &&
+                it.name.split(".").intersect(appId.split(".").toSet()).isNotEmpty()
         }.size == 1
 
     private fun hasThirdPartyLauncherConfigured(manifest: ManifestData, appId: String) =
-        manifest.activities.any { it.isHomeActivity &&
-            it.name.split(".").intersect(appId.split(".").toSet()).isEmpty()
+        manifest.activities.any {
+            it.isHomeActivity &&
+                it.name.split(".").intersect(appId.split(".").toSet()).isEmpty()
         }
 
     override fun stopApp(appId: String) {
@@ -275,6 +279,17 @@ class AndroidDriver(
 
         dadb.pull(out, deviceScreenshotPath)
         dadb.shell("rm $deviceScreenshotPath")
+    }
+
+    override fun setDeviceProxy(host: String, port: Int) {
+        val proxy = "$host:$port"
+        logger.info("Setting device proxy $proxy (android)")
+        dadb.shell("settings put global http_proxy $proxy")
+    }
+
+    override fun removeDeviceProxy() {
+        logger.info("removing device proxy (android)")
+        dadb.shell("settings put global http_proxy :0")
     }
 
     override fun inputText(text: String) {
@@ -406,6 +421,7 @@ class AndroidDriver(
 
     companion object {
 
+        private val logger = LoggerFactory.getLogger(AndroidDriver::class.java)
         private const val SERVER_LAUNCH_TIMEOUT_MS = 5000
     }
 }

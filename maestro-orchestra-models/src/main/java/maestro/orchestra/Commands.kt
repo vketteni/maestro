@@ -357,7 +357,7 @@ data class MockStartCommand(
     val file: String?
 ): Command {
 
-    override fun description(): String = "Mock start"
+    override fun description(): String = "Mock start (${if (file == null) "Record" else "Replay"})"
 
     override fun injectEnv(env: Map<String, String>): Command = this
 }

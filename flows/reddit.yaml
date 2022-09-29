@@ -1,0 +1,17 @@
+appId: com.reddit.frontpage.alpha
+---
+- clearState
+- mockStart:
+    file: "app_0.replay"
+- launchApp
+- tapOn: ".*Log in.*"
+- tapOn:
+    text: "Add account"
+    optional: true
+- tapOn: Username
+- inputText: "droidtestaccount"
+- tapOn: Password
+- inputText: "Ruw@VJ4t"
+- tapOn: "Continue"
+- tapOn: Popular
+- mockStop

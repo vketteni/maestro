@@ -111,7 +111,7 @@ data class YamlFluentCommand(
             mockStart != null -> listOf(MaestroCommand(MockStartCommand(
                 recordIfMissing = mockStart.recordIfMissing ?: true,
                 recordIfStale = mockStart.recordIfStale,
-                file = mockStart.file ?: "app.replay",
+                file = mockStart.file,
                 enabled = mockStart.enabled ?: true
             )))
             mockStop != null -> listOf(MaestroCommand(MockStopCommand()))
