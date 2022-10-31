@@ -25,12 +25,19 @@ import maestro.Maestro
 import maestro.cli.device.Device
 import maestro.cli.device.PickDeviceInteractor
 import maestro.cli.device.Platform
+import maestro.drivers.WebDriver
 
 object MaestroFactory {
     private const val defaultHost = "localhost"
     private const val idbPort = 10882
 
     fun createMaestro(host: String?, port: Int?, deviceId: String?): MaestroResult {
+        if (true) {
+            return MaestroResult(
+                maestro = Maestro(WebDriver().apply { open() }),
+                device = null,
+            )
+        }
         if (host == null) {
             val device = PickDeviceInteractor.pickDevice(deviceId)
 

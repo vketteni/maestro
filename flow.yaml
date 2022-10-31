@@ -1,0 +1,4 @@
+appId: "https://google.com"
+---
+- launchApp
+- tapOn: .*Reject.*
