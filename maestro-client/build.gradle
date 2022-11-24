@@ -65,6 +65,7 @@ dependencies {
     api 'org.mozilla:rhino:1.7.14'
     api 'org.jsoup:jsoup:1.15.3'
     api 'com.squareup.okhttp3:okhttp:4.10.0'
+    api 'org.boofcv:boofcv-core:0.41'
 
     implementation project(':maestro-ios')
     implementation 'com.google.code.findbugs:jsr305:3.0.2'

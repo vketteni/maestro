@@ -29,6 +29,8 @@ import maestro.MaestroException
 import maestro.MaestroTimer
 import maestro.TreeNode
 import maestro.UiElement
+import maestro.cv.ImageTemplateMatching
+import maestro.cv.Images
 import maestro.js.JsEngine
 import maestro.orchestra.error.UnicodeNotSupportedError
 import maestro.orchestra.filter.FilterWithDescription
@@ -39,6 +41,7 @@ import org.jsoup.safety.Safelist
 import java.io.File
 import java.lang.Long.max
 import java.nio.file.Files
+import javax.imageio.ImageIO
 
 class Orchestra(
     private val maestro: Maestro,
@@ -184,6 +187,7 @@ class Orchestra(
             is RepeatCommand -> repeatCommand(command, maestroCommand)
             is DefineVariablesCommand -> defineVariablesCommand(command)
             is RunScriptCommand -> runScriptCommand(command)
+            is TapOnImageCommand -> tapOnImageCommand(command)
             is ApplyConfigurationCommand -> false
             else -> true
         }.also { mutating ->
@@ -191,6 +195,32 @@ class Orchestra(
                 timeMsOfLastInteraction = System.currentTimeMillis()
             }
         }
+    }
+
+    private fun tapOnImageCommand(command: TapOnImageCommand): Boolean {
+        val template = Images.base64ToImage(command.imageBase64)
+
+        val screen = ImageIO.read(maestro.takeScreenshot().inputStream())
+
+        val deviceInfo = maestro.deviceInfo()
+
+        val match = ImageTemplateMatching
+            .findTemplate(
+                screen,
+                template,
+            )
+            ?.scale(1 / deviceInfo.density)
+            ?: throw MaestroException.ElementNotFound(
+                "Could not find template in image",
+                maestro.viewHierarchy().root,
+            )
+
+        maestro.tap(
+            match.center().x,
+            match.center().y,
+        )
+
+        return true
     }
 
     private fun assertConditionCommand(command: AssertConditionCommand): Boolean {

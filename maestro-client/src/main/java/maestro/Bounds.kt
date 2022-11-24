@@ -37,6 +37,15 @@ data class Bounds(
         return width * height
     }
 
+    fun scale(factor: Double): Bounds {
+        return Bounds(
+            x = (x * factor).toInt(),
+            y = (y * factor).toInt(),
+            width = (width * factor).toInt(),
+            height = (height * factor).toInt()
+        )
+    }
+
     fun contains(x: Int, y: Int): Boolean {
         return x in this.x until this.x + width
             && y in this.y until this.y + height

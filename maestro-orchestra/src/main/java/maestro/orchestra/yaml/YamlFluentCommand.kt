@@ -49,17 +49,21 @@ import maestro.orchestra.StopAppCommand
 import maestro.orchestra.SwipeCommand
 import maestro.orchestra.TakeScreenshotCommand
 import maestro.orchestra.TapOnElementCommand
+import maestro.orchestra.TapOnImageCommand
 import maestro.orchestra.TapOnPointCommand
 import maestro.orchestra.error.InvalidInitFlowFile
 import maestro.orchestra.error.SyntaxError
 import maestro.orchestra.util.Env.withEnv
 import java.nio.file.Path
+import java.util.Base64
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.readBytes
 import kotlin.io.path.readText
 
 data class YamlFluentCommand(
     val tapOn: YamlElementSelectorUnion? = null,
+    val tapOnImage: String? = null,
     val longPressOn: YamlElementSelectorUnion? = null,
     val assertVisible: YamlElementSelectorUnion? = null,
     val assertNotVisible: YamlElementSelectorUnion? = null,
@@ -91,6 +95,7 @@ data class YamlFluentCommand(
         return when {
             launchApp != null -> listOf(launchApp(launchApp, appId))
             tapOn != null -> listOf(tapCommand(tapOn))
+            tapOnImage != null -> listOf(tapOnImageCommand(flowPath, tapOnImage))
             longPressOn != null -> listOf(tapCommand(longPressOn, longPress = true))
             assertVisible != null -> listOf(
                 MaestroCommand(
@@ -193,6 +198,19 @@ data class YamlFluentCommand(
             )
             else -> throw SyntaxError("Invalid command: No mapping provided for $this")
         }
+    }
+
+    private fun tapOnImageCommand(flowPath: Path, filePath: String): MaestroCommand {
+        return MaestroCommand(
+            TapOnImageCommand(
+                imageBase64 = Base64.getEncoder().encodeToString(
+                    resolvePath(flowPath, filePath)
+                        .toAbsolutePath()
+                        .readBytes()
+                ),
+                description = filePath,
+            )
+        )
     }
 
     fun getWatchFiles(flowPath: Path): List<Path> {

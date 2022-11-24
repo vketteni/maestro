@@ -20,7 +20,6 @@
 package ios.idb
 
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import com.google.gson.Gson
@@ -76,7 +75,8 @@ class IdbIOSDevice(
 
             DeviceInfo(
                 widthPixels = screenDimensions.width.toInt(),
-                heightPixels = screenDimensions.height.toInt()
+                heightPixels = screenDimensions.height.toInt(),
+                density = screenDimensions.density,
             )
         }
     }
@@ -331,7 +331,7 @@ class IdbIOSDevice(
         // Stop the app before clearing the file system
         // This prevents the app from saving its state after it has been cleared
         stop(id)
-        
+
         // Wait for the app to be stopped, unfortunately idb's stop()
         // does not wait for the process to finish
         Thread.sleep(500)

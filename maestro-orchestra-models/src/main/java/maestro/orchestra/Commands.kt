@@ -582,3 +582,23 @@ data class RunScriptCommand(
 
 }
 
+data class TapOnImageCommand(
+    val imageBase64: String,
+    val description: String? = null
+) : Command {
+
+    override fun description(): String {
+        return if (description != null) {
+            "Tap on $description"
+        } else {
+            "Tap on image"
+        }
+    }
+
+    override fun evaluateScripts(jsEngine: JsEngine): Command {
+        return copy(
+            imageBase64 = imageBase64.evaluateScripts(jsEngine),
+            description = description?.evaluateScripts(jsEngine),
+        )
+    }
+}
