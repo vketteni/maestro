@@ -7,6 +7,7 @@
 
 import XCTest
 import FlyingFox
+import maestro_driver_ios
 
 class maestro_driver_iosUITests: XCTestCase {
 
@@ -25,17 +26,32 @@ class maestro_driver_iosUITests: XCTestCase {
 
     func testHttpServer() async throws {
         let server = HTTPServer(port: 9080)
-        let subTreeRoute = HTTPRoute("/sub_tree?appId=*")
+        let subTreeRoute = HTTPRoute("/subTree?appId=*")
         await server.appendRoute(subTreeRoute) { request in
             guard let appId = request.query["appId"] else {
                 return HTTPResponse(statusCode: HTTPStatusCode.badRequest)
             }
-            let debugDescriptionResult = await MainActor.run {
-                XCUIApplication(bundleIdentifier: appId).debugDescription
+            let viewHierarchyDictionaryResult = await MainActor.run {
+                try? XCUIApplication(bundleIdentifier: appId).snapshot().dictionaryRepresentation
             }
-            print(debugDescriptionResult)
-            return HTTPResponse(statusCode: .ok)
+            guard let viewHierarchyDictionary = viewHierarchyDictionaryResult else {
+                print("Cannot return view hierarchy, throwing exception..")
+                throw ServerError.ApplicationSnapshotFailure
+            }
+            guard let hierarchyJsonData = try? JSONSerialization.data(
+                withJSONObject: viewHierarchyDictionary,
+                options: .prettyPrinted
+            ) else {
+                print("Serialization of view hierarchy failed")
+                throw ServerError.SnapshotSerializeFailure
+            }
+            return HTTPResponse(statusCode: .ok, body: hierarchyJsonData)
         }
         try await server.start()
+    }
+    
+    enum ServerError: Error {
+        case ApplicationSnapshotFailure
+        case SnapshotSerializeFailure
     }
 }
