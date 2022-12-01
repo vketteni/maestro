@@ -4,7 +4,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import maestro.MaestroTimer
 import maestro.cli.CliError
-import maestro.cli.util.CommandLineUtils.runCommand
+import maestro.cli.util.CommandLineUtils
+import okio.buffer
+import okio.source
 
 object Simctl {
     fun list(): SimctlList {
@@ -28,15 +30,19 @@ object Simctl {
         } ?: throw CliError("Device $deviceId did not boot in time")
     }
 
+    fun installApp(deviceId: String, appPath: String) {
+        CommandLineUtils.runCommand("xcrun simctl install $deviceId $appPath")
+    }
+
     fun launchSimulator(deviceId: String) {
-        runCommand("xcrun simctl boot $deviceId")
+        CommandLineUtils.runCommand("xcrun simctl boot $deviceId")
 
         var exceptionToThrow: Exception? = null
 
         // Up to 10 iterations => max wait time of 1 second
         repeat(10) {
             try {
-                runCommand("open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app --args -CurrentDeviceUDID $deviceId")
+                CommandLineUtils.runCommand("open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app --args -CurrentDeviceUDID $deviceId")
                 return
             } catch (e: Exception) {
                 exceptionToThrow = e
@@ -45,6 +51,20 @@ object Simctl {
         }
 
         exceptionToThrow?.let { throw it }
+    }
+
+    fun ensureLaunchApp(deviceId: String, bundleId: String) {
+        CommandLineUtils.runCommand("xcrun simctl launch $deviceId $bundleId")
+
+        MaestroTimer.withTimeout(2000) {
+            val processId = ProcessBuilder(
+                "bash",
+                "-c",
+                "xcrun simctl spawn booted launchctl print system | grep $bundleId | awk '/$bundleId/ {print \$1}'"
+            ).start().inputStream.source().buffer().readUtf8().trim()
+
+            processId
+        } ?: throw CliError("Unable to launch $bundleId")
     }
 
 }

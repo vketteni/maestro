@@ -1,20 +1,32 @@
 package maestro.cli.device
 
 import com.github.michaelbull.result.get
+import com.github.michaelbull.result.onFailure
 import dadb.Dadb
 import io.grpc.ManagedChannelBuilder
 import ios.idb.IdbIOSDevice
+import maestro.Maestro
 import maestro.MaestroTimer
 import maestro.cli.CliError
 import maestro.cli.debuglog.DebugLogStore
+import maestro.cli.device.ios.IOSUiTestRunner
 import maestro.cli.device.ios.Simctl
 import maestro.cli.device.ios.SimctlList
 import maestro.cli.util.EnvUtils
+import okio.Path.Companion.toPath
+import okio.buffer
+import okio.sink
+import okio.source
+import org.rauschig.jarchivelib.ArchiverFactory
 import java.io.File
 import java.net.Socket
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.logging.Logger
 import kotlin.concurrent.thread
+import kotlin.io.path.pathString
 
 object DeviceService {
 
@@ -124,18 +136,21 @@ object DeviceService {
                 process.exitValue() == 0
             } || error("Simulator failed to boot")
 
-            // Test if idb can get accessibility info elements with non-zero frame with
-            logger.warning("Waiting for Accessibility info to become available..")
-            MaestroTimer.retryUntilTrue(timeoutMs = 20000, delayMs = 100) {
-                // TODO: start xctest here for the app to get hierarchy, and remove null
-                val nodes = iosDevice
-                    .contentDescriptor(appId = null)
-                    .get()
+            logger.info("Installing maestro ui test driver app")
+            IOSUiTestRunner.install(device)
+            logger.info("Launching maestro ui test driver app")
+            IOSUiTestRunner.ensureOpen(device)
 
-                nodes?.frame?.Width != 0F
-            } || error("idb_companion is not able to fetch accessibility info")
+            logger.info("Trying to fetch accessibility info")
+            val nodes = iosDevice
+                .contentDescriptor(appId = IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
+                .get()
 
-            logger.warning("Simulator ready")
+            if (nodes?.frame?.Width != 0F) {
+                logger.warning("Simulator ready")
+            } else {
+                logger.warning("Simulator not ready, to dump the accessibility info")
+            }
         }
     }
 
