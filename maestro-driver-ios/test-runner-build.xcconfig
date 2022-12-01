@@ -1,0 +1,9 @@
+HERE_BUILD=$TMPDIR/output
+HERE_INTERMEDIATES=$TMPDIR/intermediates
+
+/// Paths
+/// the following paths are enough to redirect everything to $HERE_BUILD
+MODULE_CACHE_DIR    = $(HERE_BUILD)/DerivedData/ModuleCache
+OBJROOT             = $(HERE_INTERMEDIATES)
+SHARED_PRECOMPS_DIR = $(HERE_INTERMEDIATES)/PrecompiledHeaders
+SYMROOT             = $(HERE_BUILD)/Products
