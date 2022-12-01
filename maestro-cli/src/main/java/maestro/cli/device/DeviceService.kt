@@ -127,11 +127,12 @@ object DeviceService {
             // Test if idb can get accessibility info elements with non-zero frame with
             logger.warning("Waiting for Accessibility info to become available..")
             MaestroTimer.retryUntilTrue(timeoutMs = 20000, delayMs = 100) {
+                // TODO: start xctest here for the app to get hierarchy, and remove null
                 val nodes = iosDevice
-                    .contentDescriptor()
+                    .contentDescriptor(appId = null)
                     .get()
 
-                nodes?.any { it.frame?.width != 0F } == true
+                nodes?.frame?.Width != 0F
             } || error("idb_companion is not able to fetch accessibility info")
 
             logger.warning("Simulator ready")

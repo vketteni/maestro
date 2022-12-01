@@ -20,7 +20,6 @@
 package ios.idb
 
 import com.github.michaelbull.result.Result
-import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.runCatching
 import com.google.gson.Gson
@@ -55,6 +54,10 @@ import ios.IOSDevice
 import ios.device.AccessibilityNode
 import ios.device.DeviceInfo
 import ios.grpc.BlockingStreamObserver
+import ios.hierarchy.XCUIElement
+import okhttp3.HttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okio.Sink
 import okio.buffer
 import java.io.File
@@ -68,6 +71,12 @@ class IdbIOSDevice(
 
     private val blockingStub = CompanionServiceGrpc.newBlockingStub(channel)
     private val asyncStub = CompanionServiceGrpc.newStub(channel)
+    private val okHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .build()
+    }
 
     override fun deviceInfo(): Result<DeviceInfo, Throwable> {
         return runCatching {
@@ -81,12 +90,25 @@ class IdbIOSDevice(
         }
     }
 
-    override fun contentDescriptor(): Result<List<AccessibilityNode>, Throwable> {
+    override fun contentDescriptor(appId: String?): Result<XCUIElement, Throwable> {
         return runCatching {
-            val response = blockingStub.accessibilityInfo(accessibilityInfoRequest {})
-
-            GSON.fromJson(response.json, Array<AccessibilityNode>::class.java)
-                .toList()
+            val httpUrl = HttpUrl.Builder()
+                .scheme("http")
+                .host("localhost")
+                .addPathSegment("subTree")
+                .port(9080)
+                .addQueryParameter("appId", appId)
+                .build()
+            val request = Request.Builder().get().url(httpUrl).build()
+            val response = okHttpClient.newCall(request).execute()
+            val xcUiElement = if (response.isSuccessful) {
+                response.body?.let {
+                    GSON.fromJson(String(it.bytes()), XCUIElement::class.java)
+                } ?: throw IllegalStateException("View Hierarchy not available, response body is null")
+            } else {
+                throw IllegalArgumentException("View Hierarchy not available, response from xcUITest not successful")
+            }
+            xcUiElement
         }
     }
 
@@ -380,6 +402,7 @@ class IdbIOSDevice(
 
             stream.onCompleted()
             responseObserver.awaitResult()
+
         }
     }
 
