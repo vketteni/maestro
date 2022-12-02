@@ -171,7 +171,7 @@ class IOSDriver(
         attributes["resource-id"] = xcUiElement.identifier
         val right = xcUiElement.frame.X + xcUiElement.frame.Width
         val bottom = xcUiElement.frame.Y + xcUiElement.frame.Height
-        attributes["bounds"] = "[${xcUiElement.frame.X},${xcUiElement.frame.Y}], [$right,$bottom]"
+        attributes["bounds"] = "[${xcUiElement.frame.X.toInt()},${xcUiElement.frame.Y.toInt()}][${right.toInt()},${bottom.toInt()}]"
         attributes["enabled"] = xcUiElement.enabled.toString()
         attributes["focused"] = xcUiElement.hasFocus.toString()
         attributes["selected"] = xcUiElement.selected.toString()
