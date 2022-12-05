@@ -1,11 +1,9 @@
 package maestro.cli.device
 
 import com.github.michaelbull.result.get
-import com.github.michaelbull.result.onFailure
 import dadb.Dadb
 import io.grpc.ManagedChannelBuilder
 import ios.idb.IdbIOSDevice
-import maestro.Maestro
 import maestro.MaestroTimer
 import maestro.cli.CliError
 import maestro.cli.debuglog.DebugLogStore
@@ -13,20 +11,11 @@ import maestro.cli.device.ios.IOSUiTestRunner
 import maestro.cli.device.ios.Simctl
 import maestro.cli.device.ios.SimctlList
 import maestro.cli.util.EnvUtils
-import okio.Path.Companion.toPath
-import okio.buffer
-import okio.sink
-import okio.source
-import org.rauschig.jarchivelib.ArchiverFactory
 import java.io.File
 import java.net.Socket
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
-import java.util.logging.Logger
 import kotlin.concurrent.thread
-import kotlin.io.path.pathString
+import kotlin.math.log
 
 object DeviceService {
 
@@ -136,20 +125,19 @@ object DeviceService {
                 process.exitValue() == 0
             } || error("Simulator failed to boot")
 
-            logger.info("Installing maestro ui test driver app")
-            IOSUiTestRunner.install(device)
-            logger.info("Launching maestro ui test driver app")
-            IOSUiTestRunner.ensureOpen(device)
+            logger.info("Running xctest for maestro ui test driver app")
+            IOSUiTestRunner.runXCTest(device)
+            logger.info("[Start] Ensuring ui test runner app installs and opens")
+            IOSUiTestRunner.ensureOpen()
+            logger.info("[Done] Ensuring ui test runner app installs and opens")
 
             logger.info("Trying to fetch accessibility info")
             val nodes = iosDevice
                 .contentDescriptor(appId = IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
                 .get()
 
-            if (nodes?.frame?.Width != 0F) {
-                logger.warning("Simulator ready")
-            } else {
-                logger.warning("Simulator not ready, to dump the accessibility info")
+            MaestroTimer.retryUntilTrue(3000) {
+                nodes?.frame?.Width != null && nodes.frame.Width != 0F
             }
         }
     }

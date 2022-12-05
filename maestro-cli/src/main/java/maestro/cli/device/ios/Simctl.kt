@@ -53,18 +53,22 @@ object Simctl {
         exceptionToThrow?.let { throw it }
     }
 
-    fun ensureLaunchApp(deviceId: String, bundleId: String) {
-        CommandLineUtils.runCommand("xcrun simctl launch $deviceId $bundleId")
-
-        MaestroTimer.withTimeout(2000) {
-            val processId = ProcessBuilder(
+    fun ensureAppAlive(bundleId: String) {
+        MaestroTimer.retryUntilTrue(timeoutMs = 4000, delayMs = 300) {
+            val processOutput = ProcessBuilder(
                 "bash",
                 "-c",
-                "xcrun simctl spawn booted launchctl print system | grep $bundleId | awk '/$bundleId/ {print \$1}'"
+                "xcrun simctl spawn booted launchctl print system | grep $bundleId | awk '/$bundleId/ {print \$3}'"
             ).start().inputStream.source().buffer().readUtf8().trim()
 
-            processId
-        } ?: throw CliError("Unable to launch $bundleId")
+            processOutput.contains(bundleId)
+        }
     }
 
+    fun runXcTestWithoutBuild(deviceId: String, xcTestRunFilePath: String) {
+        CommandLineUtils.runCommand(
+            "xcodebuild test-without-building -xctestrun $xcTestRunFilePath -destination id=$deviceId",
+            waitForCompletion = false
+        )
+    }
 }
