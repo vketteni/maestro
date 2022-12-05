@@ -67,6 +67,7 @@ import java.util.concurrent.TimeoutException
 
 class IdbIOSDevice(
     private val channel: ManagedChannel,
+    override val deviceId: String?,
 ) : IOSDevice {
 
     private val blockingStub = CompanionServiceGrpc.newBlockingStub(channel)

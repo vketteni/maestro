@@ -384,16 +384,7 @@ class Maestro(private val driver: Driver) : AutoCloseable {
         private val LOGGER = LoggerFactory.getLogger(Maestro::class.java)
         private const val SCREENSHOT_DIFF_THRESHOLD = 0.005 // 0.5%
 
-        fun ios(host: String, port: Int): Maestro {
-            val channel = ManagedChannelBuilder.forAddress(host, port)
-                .usePlaintext()
-                .build()
-
-            return ios(channel)
-        }
-
-        fun ios(channel: ManagedChannel): Maestro {
-            val driver = IOSDriver(IdbIOSDevice(channel))
+        fun ios(driver: Driver): Maestro {
             driver.open()
             return Maestro(driver)
         }

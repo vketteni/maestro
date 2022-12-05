@@ -7,23 +7,17 @@ import ios.idb.IdbIOSDevice
 import maestro.MaestroTimer
 import maestro.cli.CliError
 import maestro.cli.debuglog.DebugLogStore
-import maestro.cli.device.ios.IOSUiTestRunner
-import maestro.cli.device.ios.Simctl
-import maestro.cli.device.ios.SimctlList
+import maestro.ios.IOSUiTestRunner
+import maestro.ios.Simctl
+import maestro.ios.SimctlList
 import maestro.cli.util.EnvUtils
+import maestro.drivers.IOSDriver
 import java.io.File
 import java.net.Socket
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
-import kotlin.math.log
 
 object DeviceService {
-
-    private val NULL_FILE = File(
-        if (System.getProperty("os.name")
-                .startsWith("Windows")
-        ) "NUL" else "/dev/null"
-    )
 
     private val logger = DebugLogStore.loggerFor(DeviceService::class.java)
 
@@ -108,7 +102,7 @@ object DeviceService {
             .usePlaintext()
             .build()
 
-        IdbIOSDevice(channel).use { iosDevice ->
+        IdbIOSDevice(channel, device.instanceId).use { iosDevice ->
             logger.warning("Waiting for idb service to start..")
             MaestroTimer.retryUntilTrue(timeoutMs = 60000, delayMs = 100) {
                 Socket(idbHost, idbPort).use { true }
@@ -125,20 +119,9 @@ object DeviceService {
                 process.exitValue() == 0
             } || error("Simulator failed to boot")
 
-            logger.info("Running xctest for maestro ui test driver app")
-            IOSUiTestRunner.runXCTest(device)
-            logger.info("[Start] Ensuring ui test runner app installs and opens")
-            IOSUiTestRunner.ensureOpen()
-            logger.info("[Done] Ensuring ui test runner app installs and opens")
-
-            logger.info("Trying to fetch accessibility info")
-            val nodes = iosDevice
-                .contentDescriptor(appId = IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
-                .get()
-
-            MaestroTimer.retryUntilTrue(3000) {
-                nodes?.frame?.Width != null && nodes.frame.Width != 0F
-            }
+            logger.info("Installing xctest runner app and trying to fetch accessibility info")
+            val iosDriver = IOSDriver(iosDevice)
+            iosDriver.open()
         }
     }
 
