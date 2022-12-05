@@ -20,7 +20,7 @@
 package maestro.drivers
 
 import com.github.michaelbull.result.expect
-import com.github.michaelbull.result.getOr
+import com.github.michaelbull.result.get
 import com.github.michaelbull.result.getOrThrow
 import com.github.michaelbull.result.onSuccess
 import ios.IOSDevice
@@ -30,10 +30,12 @@ import maestro.DeviceInfo
 import maestro.Driver
 import maestro.KeyCode
 import maestro.MaestroException
+import maestro.MaestroTimer
 import maestro.Point
 import maestro.ScreenRecording
 import maestro.SwipeDirection
 import maestro.TreeNode
+import maestro.ios.IOSUiTestRunner
 import maestro.utils.FileUtils
 import okio.Sink
 import java.io.File
@@ -54,6 +56,22 @@ class IOSDriver(
     }
 
     override fun open() {
+        ensureGrpcChannel()
+        ensureXCUITestChannel()
+    }
+
+    private fun ensureXCUITestChannel() {
+        IOSUiTestRunner.runXCTest(iosDevice.deviceId ?: throw RuntimeException("No device selected for running UI tests"))
+        IOSUiTestRunner.ensureOpen()
+        val nodes = iosDevice
+            .contentDescriptor(appId = IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
+            .get()
+        MaestroTimer.retryUntilTrue(3000) {
+            nodes?.frame?.Width != null && nodes.frame.Width != 0F
+        }
+    }
+
+    private fun ensureGrpcChannel() {
         val response = iosDevice.deviceInfo().expect {}
 
         widthPixels = response.widthPixels

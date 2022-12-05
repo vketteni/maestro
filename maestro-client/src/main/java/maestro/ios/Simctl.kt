@@ -1,14 +1,14 @@
-package maestro.cli.device.ios
+package maestro.ios
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import maestro.MaestroTimer
-import maestro.cli.CliError
-import maestro.cli.util.CommandLineUtils
+import maestro.utils.CommandLineUtils
 import okio.buffer
 import okio.source
 
 object Simctl {
+
     fun list(): SimctlList {
         val command = listOf("xcrun", "simctl", "list", "-j")
 
@@ -27,11 +27,7 @@ object Simctl {
                     .find { it.udid == deviceId }
                     ?.state == "Booted"
             ) true else null
-        } ?: throw CliError("Device $deviceId did not boot in time")
-    }
-
-    fun installApp(deviceId: String, appPath: String) {
-        CommandLineUtils.runCommand("xcrun simctl install $deviceId $appPath")
+        } ?: throw RuntimeException("Device $deviceId did not boot in time")
     }
 
     fun launchSimulator(deviceId: String) {

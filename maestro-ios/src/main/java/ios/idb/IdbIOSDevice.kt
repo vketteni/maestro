@@ -75,6 +75,7 @@ import java.util.zip.GZIPInputStream
 
 class IdbIOSDevice(
     private val channel: ManagedChannel,
+    override val deviceId: String?,
 ) : IOSDevice {
 
     private val blockingStub = CompanionServiceGrpc.newBlockingStub(channel)
