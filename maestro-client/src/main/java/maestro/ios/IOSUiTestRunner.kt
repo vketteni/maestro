@@ -4,6 +4,7 @@ import maestro.Maestro
 import okio.buffer
 import okio.sink
 import okio.source
+import org.apache.commons.io.FileUtils
 import org.rauschig.jarchivelib.ArchiverFactory
 import java.io.File
 
@@ -39,6 +40,15 @@ object IOSUiTestRunner {
                 xctestRunFile.absolutePath
             )
         }
+    }
+
+    fun cleanup() {
+        val xctestConfig = "${System.getenv("TMP_DIR")}/$XCTEST_RUN_PATH"
+        val hostApp = "${System.getenv("TMPDIR")}/Debug-iphonesimulator/maestro-driver-ios.app"
+        val uiTestRunnerApp = "${System.getenv("TMPDIR")}/Debug-iphonesimulator/maestro-driver-iosUITests-Runner.app"
+        FileUtils.deleteQuietly(File(xctestConfig))
+        FileUtils.deleteQuietly(File(uiTestRunnerApp))
+        FileUtils.deleteQuietly(File(hostApp))
     }
 
     private fun extractZipToApp(appFileName: String, srcAppPath: String) {

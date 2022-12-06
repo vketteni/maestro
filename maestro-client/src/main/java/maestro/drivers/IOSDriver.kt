@@ -78,6 +78,8 @@ class IOSDriver(
 
     override fun close() {
         iosDevice.close()
+        iosDevice.uninstall(IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
+        IOSUiTestRunner.cleanup()
 
         widthPixels = null
         heightPixels = null
