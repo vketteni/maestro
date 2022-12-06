@@ -3,7 +3,7 @@ package maestro.ios
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import maestro.MaestroTimer
-import maestro.utils.CommandLineUtils
+import ios.commands.CommandLineUtils
 import okio.buffer
 import okio.source
 

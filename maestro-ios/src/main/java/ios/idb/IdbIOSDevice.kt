@@ -59,6 +59,7 @@ import ios.device.AccessibilityNode
 import ios.device.DeviceInfo
 import ios.grpc.BlockingStreamObserver
 import ios.hierarchy.XCUIElement
+import ios.logger.IOSDriverLogger
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -115,7 +116,9 @@ class IdbIOSDevice(
                     GSON.fromJson(String(it.bytes()), XCUIElement::class.java)
                 } ?: throw IllegalStateException("View Hierarchy not available, response body is null")
             } else {
-                throw IllegalArgumentException("View Hierarchy not available, response from xcUITest not successful")
+                IOSDriverLogger.dumpDeviceLogs(deviceId)
+                throw IllegalArgumentException("Maestro was not able to capture view hierarchy. Run maestro bugreport command and submit " +
+                    "new github issue on https://github.com/mobile-dev-inc/maestro/issues/new with the bugreport created.")
             }
             xcUiElement
         }

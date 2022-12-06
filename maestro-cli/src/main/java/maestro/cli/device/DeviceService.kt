@@ -1,17 +1,15 @@
 package maestro.cli.device
 
-import com.github.michaelbull.result.get
 import dadb.Dadb
 import io.grpc.ManagedChannelBuilder
 import ios.idb.IdbIOSDevice
 import maestro.MaestroTimer
 import maestro.cli.CliError
 import maestro.cli.debuglog.DebugLogStore
-import maestro.ios.IOSUiTestRunner
-import maestro.ios.Simctl
-import maestro.ios.SimctlList
 import maestro.cli.util.EnvUtils
 import maestro.drivers.IOSDriver
+import maestro.ios.Simctl
+import maestro.ios.SimctlList
 import java.io.File
 import java.net.Socket
 import java.util.concurrent.TimeUnit
