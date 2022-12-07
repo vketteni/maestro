@@ -36,6 +36,7 @@ import maestro.ScreenRecording
 import maestro.SwipeDirection
 import maestro.TreeNode
 import maestro.debuglog.DebugLogStore
+import maestro.ios.GetRunningAppIdResolver
 import maestro.ios.IOSUiTestRunner
 import maestro.utils.FileUtils
 import okio.Sink
@@ -198,7 +199,9 @@ class IOSDriver(
     }
 
     override fun contentDescriptor(): TreeNode {
-        val xcUiElement = iosDevice.contentDescriptor(appId).expect {}
+        val getRunningAppId = GetRunningAppIdResolver().getRunningAppId()
+
+        val xcUiElement = iosDevice.contentDescriptor(appId ?: getRunningAppId).expect {}
 
         return mapHierarchy(xcUiElement)
     }

@@ -35,7 +35,7 @@ interface IOSDevice : AutoCloseable {
 
     fun deviceInfo(): Result<DeviceInfo, Throwable>
 
-    fun contentDescriptor(appId: String?): Result<XCUIElement, Throwable>
+    fun contentDescriptor(appId: String): Result<XCUIElement, Throwable>
 
     fun describePoint(x: Int, y: Int): Result<List<AccessibilityNode>, Throwable>
 
