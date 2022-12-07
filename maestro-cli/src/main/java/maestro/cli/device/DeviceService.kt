@@ -5,7 +5,7 @@ import io.grpc.ManagedChannelBuilder
 import ios.idb.IdbIOSDevice
 import maestro.MaestroTimer
 import maestro.cli.CliError
-import maestro.cli.debuglog.DebugLogStore
+import maestro.debuglog.DebugLogStore
 import maestro.cli.util.EnvUtils
 import maestro.drivers.IOSDriver
 import maestro.ios.Simctl

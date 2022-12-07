@@ -6,6 +6,7 @@ import maestro.MaestroTimer
 import ios.commands.CommandLineUtils
 import okio.buffer
 import okio.source
+import java.util.concurrent.TimeUnit
 
 object Simctl {
 
@@ -51,11 +52,14 @@ object Simctl {
 
     fun ensureAppAlive(bundleId: String) {
         MaestroTimer.retryUntilTrue(timeoutMs = 4000, delayMs = 300) {
-            val processOutput = ProcessBuilder(
+            val process = ProcessBuilder(
                 "bash",
                 "-c",
                 "xcrun simctl spawn booted launchctl print system | grep $bundleId | awk '/$bundleId/ {print \$3}'"
-            ).start().inputStream.source().buffer().readUtf8().trim()
+            ).start()
+
+            val processOutput = process.inputStream.source().buffer().readUtf8().trim()
+            process.waitFor(3000, TimeUnit.MILLISECONDS)
 
             processOutput.contains(bundleId)
         }

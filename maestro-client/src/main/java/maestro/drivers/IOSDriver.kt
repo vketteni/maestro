@@ -35,6 +35,7 @@ import maestro.Point
 import maestro.ScreenRecording
 import maestro.SwipeDirection
 import maestro.TreeNode
+import maestro.debuglog.DebugLogStore
 import maestro.ios.IOSUiTestRunner
 import maestro.utils.FileUtils
 import okio.Sink
@@ -50,6 +51,8 @@ class IOSDriver(
     private var heightPixels: Int? = null
     private var appId: String? = null
 
+    private val logger by lazy { DebugLogStore.loggerFor(IOSDriver::class.java) }
+
     override fun name(): String {
         return "iOS Simulator"
     }
@@ -60,13 +63,29 @@ class IOSDriver(
     }
 
     private fun ensureXCUITestChannel() {
+        logger.info("[Start] Installing xctest ui runner on ${iosDevice.deviceId}")
         IOSUiTestRunner.runXCTest(iosDevice.deviceId ?: throw RuntimeException("No device selected for running UI tests"))
+        logger.info("[Done] Installing xctest ui runner on ${iosDevice.deviceId}")
+
+        logger.info("[Start] Ensuring ui test runner app is launched on ${iosDevice.deviceId}")
         IOSUiTestRunner.ensureOpen()
+        logger.info("[Done] Ensuring ui test runner app is launched on ${iosDevice.deviceId}")
+
+        logger.info("[Start] Trying to view hierarchy for ${iosDevice.deviceId}")
         val nodes = iosDevice
             .contentDescriptor(appId = IOSUiTestRunner.UI_TEST_RUNNER_APP_BUNDLE_ID)
             .get()
-        MaestroTimer.retryUntilTrue(3000) {
+        val isHierarchyAccessible = MaestroTimer.retryUntilTrue(3000) {
             nodes?.frame?.Width != null && nodes.frame.Width != 0F
+        }
+        if (isHierarchyAccessible) {
+            logger.info("[Done] Trying to view hierarchy for ${iosDevice.deviceId}")
+        } else {
+            logger.warning("[Error] Trying to view hierarchy for ${iosDevice.deviceId}")
+            error(
+                "Maestro was not able to capture view hierarchy. Run maestro bugreport command and submit " +
+                    "new github issue on https://github.com/mobile-dev-inc/maestro/issues/new with the bugreport created."
+            )
         }
     }
 
