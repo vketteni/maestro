@@ -1,5 +1,6 @@
 enum ServerError: Error {
     case ApplicationSnapshotFailure
     case SnapshotSerializeFailure
-    case AppStateSerializeFailure
+    case GetRunningAppRequestSerializeFailure
+    case GetRunningAppResponseSerializeFailure
 }
