@@ -79,9 +79,9 @@ object Simctl {
     }
 
     fun runXcTestWithoutBuild(deviceId: String, xcTestRunFilePath: String) {
-//        CommandLineUtils.runCommand(
-//            "xcodebuild test-without-building -xctestrun $xcTestRunFilePath -destination id=$deviceId",
-//            waitForCompletion = false
-//        )
+        CommandLineUtils.runCommand(
+            "xcodebuild test-without-building -xctestrun $xcTestRunFilePath -destination id=$deviceId",
+            waitForCompletion = false
+        )
     }
 }
