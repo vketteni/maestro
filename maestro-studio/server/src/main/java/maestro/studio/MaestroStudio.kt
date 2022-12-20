@@ -149,7 +149,11 @@ object MaestroStudio {
         val name = "${UUID.randomUUID()}.png"
         val screenshotFile = screenshotDir.resolve(name).toFile()
         screenshotFile.deleteOnExit()
-        maestro.takeScreenshot(screenshotFile)
+        try {
+            maestro.takeScreenshot(screenshotFile)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         return screenshotFile
     }
 
