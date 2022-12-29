@@ -1,8 +1,7 @@
-package ios.xcrun
+package maestro.utils
 
 import okio.buffer
 import okio.source
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -10,8 +9,6 @@ import java.util.concurrent.TimeoutException
 object CommandLineUtils {
 
     fun runCommand(command: String, waitForCompletion: Boolean = true, outputFile: File? = null): Process {
-        LOGGER.info("Running command line operation: $command")
-
         val parts = command.split("\\s".toRegex())
             .map { it.trim() }
 
@@ -20,8 +17,6 @@ object CommandLineUtils {
 
     @Suppress("SpreadOperator")
     fun runCommand(parts: List<String>, waitForCompletion: Boolean = true, outputFile: File? = null): Process {
-        LOGGER.info("Running command line operation: $parts")
-
         val process = if (outputFile != null) {
             ProcessBuilder(*parts.toTypedArray())
                 .redirectOutput(outputFile)
@@ -45,8 +40,6 @@ object CommandLineUtils {
                     .buffer()
                     .readUtf8()
 
-                LOGGER.error("Process failed with exit code ${process.exitValue()}")
-                LOGGER.error(processOutput)
 
                 throw IllegalStateException(processOutput)
             }
@@ -54,6 +47,4 @@ object CommandLineUtils {
 
         return process
     }
-
-    private val LOGGER = LoggerFactory.getLogger(CommandLineUtils::class.java)
 }
