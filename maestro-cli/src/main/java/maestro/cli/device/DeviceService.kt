@@ -23,6 +23,9 @@ object DeviceService {
 
     fun startDevice(device: Device.AvailableForLaunch): Device.Connected {
         when (device.platform) {
+            Platform.CLI -> {
+                error("Not supposed to be called")
+            }
             Platform.IOS -> {
                 try {
                     Simctl.launchSimulator(device.modelId)

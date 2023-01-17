@@ -25,6 +25,7 @@ import maestro.Filters.asFilter
 import maestro.UiElement.Companion.toUiElement
 import maestro.UiElement.Companion.toUiElementOrNull
 import maestro.drivers.AndroidDriver
+import maestro.drivers.CliDriver
 import maestro.utils.MaestroTimer
 import maestro.utils.SocketUtils
 import okio.Buffer
@@ -520,5 +521,12 @@ class Maestro(private val driver: Driver) : AutoCloseable {
             }
             return Maestro(driver)
         }
+
+        fun cli(): Maestro {
+            return Maestro(
+                CliDriver().apply { open() }
+            )
+        }
+
     }
 }

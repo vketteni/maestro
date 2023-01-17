@@ -96,6 +96,20 @@ object MaestroSessionManager {
         port: Int?,
         deviceId: String?
     ): SelectedDevice {
+        if (deviceId == "cli") {
+            return SelectedDevice(
+                platform = Platform.CLI,
+                device = Device.Connected(
+                    instanceId = "cli",
+                    description = "CLI",
+                    platform = Platform.CLI,
+                ),
+                host = null,
+                port = null,
+                deviceId = deviceId,
+            )
+        }
+
         if (host == null) {
             val device = PickDeviceInteractor.pickDevice(deviceId)
 
@@ -133,6 +147,9 @@ object MaestroSessionManager {
         return when {
             selectedDevice.device != null -> MaestroSession(
                 maestro = when (selectedDevice.device.platform) {
+                    Platform.CLI -> {
+                        Maestro.cli()
+                    }
                     Platform.ANDROID -> {
                         Maestro.android(
                             dadb = Dadb

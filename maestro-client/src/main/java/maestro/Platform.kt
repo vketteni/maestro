@@ -1,5 +1,7 @@
 package maestro
 
 enum class Platform {
-    ANDROID, IOS
+    ANDROID,
+    IOS,
+    CLI,
 }

@@ -1,0 +1,5 @@
+appId: whatever
+---
+- launchApp: "maestro test workspace"
+- assertVisible: .*1/2 Flow Failed.*
+
