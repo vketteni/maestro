@@ -2122,6 +2122,64 @@ class IntegrationTest {
         )
     }
 
+    @Test
+    fun `Case 078 - Scroll until view is visible`() {
+        // Given
+        val commands = readCommands("078_scroll_until_visible")
+
+        // Without view
+        val driver1 = driver {
+            // No elements
+        }
+
+        // Then fail
+        assertThrows<MaestroException.ElementNotFound> {
+            Maestro(driver1).use {
+                assertThat(orchestra(it).runFlow(commands))
+            }
+        }
+
+
+        // With view
+        val elementBounds = Bounds(0, 100, 100, 100)
+        val driver2 = driver {
+            element {
+                text = "Test"
+                bounds = elementBounds
+            }
+        }
+
+        // When
+        Maestro(driver2).use {
+            assertThat(orchestra(it).runFlow(commands)).isTrue()
+        }
+
+        // Then
+        driver1.assertEvents(
+            listOf(
+                Event.SwipeWithDirection(SwipeDirection.UP, 600),
+            )
+        )
+    }
+
+    @Test
+    fun `Case 010 - Scrollz`() {
+        // Given
+        val commands = readCommands("010_scroll")
+
+        val driver = driver {
+        }
+
+        // When
+        Maestro(driver).use {
+            orchestra(it).runFlow(commands)
+        }
+
+        // Then
+        // No test failure
+        driver.assertHasEvent(Event.Scroll)
+    }
+
     private fun orchestra(maestro: Maestro) = Orchestra(
         maestro,
         lookupTimeoutMs = 0L,
