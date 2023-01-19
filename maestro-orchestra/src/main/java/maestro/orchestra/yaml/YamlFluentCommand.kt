@@ -433,7 +433,7 @@ data class YamlFluentCommand(
 
         return MaestroCommand(
             ScrollUntilVisibleCommand(
-                selector = toElementSelector(yaml.element!!),
+                selector = toElementSelector(yaml.element),
                 direction = yaml.direction ?: ScrollDirection.DOWN,
                 timeout = timeout
             )
