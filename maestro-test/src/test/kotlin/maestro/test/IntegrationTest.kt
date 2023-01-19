@@ -2162,24 +2162,6 @@ class IntegrationTest {
         )
     }
 
-    @Test
-    fun `Case 010 - Scrollz`() {
-        // Given
-        val commands = readCommands("010_scroll")
-
-        val driver = driver {
-        }
-
-        // When
-        Maestro(driver).use {
-            orchestra(it).runFlow(commands)
-        }
-
-        // Then
-        // No test failure
-        driver.assertHasEvent(Event.Scroll)
-    }
-
     private fun orchestra(maestro: Maestro) = Orchestra(
         maestro,
         lookupTimeoutMs = 0L,
